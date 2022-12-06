@@ -9,7 +9,7 @@ jobs:
     env:
       NAMESPACE: ${{ secrets. dev_namespace_docker_hub }}
       SERVICE_NAME: registration-client
-      SERVICE_LOCATION: regclient/
+      SERVICE_LOCATION: registration-client/
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
