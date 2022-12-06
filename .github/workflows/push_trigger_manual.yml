@@ -17,8 +17,8 @@ jobs:
   build_client:
     runs-on: ubuntu-latest
     env:
-      NAMESPACE: mosipdev
-      SERVICE_NAME: registration-client
+      NAMESPACE: aaronk01
+      SERVICE_NAME: registration
       SERVICE_LOCATION: registration
 
     steps:
