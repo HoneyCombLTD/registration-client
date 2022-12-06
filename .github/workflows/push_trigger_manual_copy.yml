@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NAMESPACE: ${{ secrets. dev_namespace_docker_hub }}
-      SERVICE_NAME: registration-client
+      SERVICE_NAME: registration
       SERVICE_LOCATION: registration/
 
     # Steps represent a sequence of tasks that will be executed as part of the job
