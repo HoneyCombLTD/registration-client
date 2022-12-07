@@ -1,16 +1,6 @@
-name: Maven Package upon a push 
+name: Manual push trigger
 
-on:
-
-  pull_request:
-    types: [closed]
-  push:
-    branches:
-      - '!release-branch'
-      - release-1*
-      - master
-      - 1.*
-      - develop-ug
+on: workflow_dispatch
   
 jobs:
   
@@ -18,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NAMESPACE: aaronk01
-      SERVICE_NAME: registration
+      SERVICE_NAME: registration-client
       SERVICE_LOCATION: registration
 
     steps:
@@ -47,8 +37,8 @@ jobs:
         echo ${{ env.BRANCH_NAME }}
         echo ${{ env.GPG_TTY }}
         sudo apt-get --yes install gnupg2
-        gpg2 --import ./.github/keys/mosipgpgkey_pub.gpg
-        gpg2 --quiet --batch --passphrase=${{secrets.gpg_secret}}  --allow-secret-key-import --import ./.github/keys/mosipgpgkey_sec.gpg
+#        gpg2 --import ./.github/keys/mosipgpgkey_pub.gpg
+#        gpg2 --quiet --batch --passphrase=${{secrets.gpg_secret}}  --allow-secret-key-import --import ./.github/keys/mosipgpgkey_sec.gpg
 
 #    - uses: actions/cache@v1
 #      with:
@@ -68,8 +58,7 @@ jobs:
     - name: Build with Maven
       run: |
         cd registration
-        mvn -B package --file pom.xml -s $GITHUB_WORKSPACE/settings.xml
-        
+        mvn -B package --file pom.xml -s $GITHUB_WORKSPACE/settings.xml -DskipTests -Dgpg.skip=true
 
     - name: Get version info from pom
       id: getPomVersion
@@ -81,7 +70,7 @@ jobs:
     - name: Build image
       run: |
         cd "./${{env.SERVICE_LOCATION}}"
-        docker build . --file Dockerfile --build-arg SOURCE=mosip --build-arg COMMIT_HASH=$(git rev-parse HEAD) --build-arg COMMIT_ID=$(git rev-parse --short HEAD) --build-arg BUILD_TIME=${{steps.date.outputs.date}} --tag ${{ env.SERVICE_NAME }}
+        docker build . --file Dockerfile --tag ${{ env.SERVICE_NAME }}
 
     - name: Log into registry
       run: echo "${{ secrets.release_docker_hub }}" | docker login -u ${{ secrets.actor_docker_hub }} --password-stdin
@@ -93,11 +82,7 @@ jobs:
         # Change all uppercase to lowercase
         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
         echo "push version ${{steps.getPomVersion.outputs.info}}"
-        if [[ $BRANCH_NAME == master ]]; then
-            VERSION=latest
-          else
-            VERSION=$BRANCH_NAME
-          fi
+        VERSION=$BRANCH_NAME
         echo IMAGE_ID=$IMAGE_ID
         echo VERSION=$VERSION
         docker tag $SERVICE_NAME $IMAGE_ID:$VERSION
